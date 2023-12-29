@@ -14,20 +14,18 @@ def getCoinDict():
 
         #add each coin to dict
         coinDict[coin_from] = CoinNode.CoinNode(name=coin_from)
-        print("getting edges from " + coin_from)
+        #print("Populating exchange rates for ", coin_from)
 
         #populate matrix
         for coin_to in coinList:
             if coin_from != coin_to:
                 time.sleep(13)
                 exchange_rate = API.get_crypto_exchange_rate(coin_from, coin_to)
-                print(coin_from + " to " + coin_to + " is " + str(exchange_rate))
+                #print(coin_from + " to " + coin_to + " is " + str(exchange_rate))
                 if exchange_rate is not None:
                     coinDict[coin_from].exchangeRates[coin_to] = exchange_rate
 
-    for coin in coinDict:
-        print(coin + "->")
-        print(coinDict[coin].exchangeRates)
+        print(coin_from, "-> ", coinDict[coin_from].exchangeRates)
 
     return coinDict
 
@@ -43,12 +41,11 @@ def getExchangeRate():
 
 
 def dfs(coinDict, start, visited, path, path_product):
-    print("dfs at " + start + ", path_product = ", path_product)
+    #print("dfs at " + start + ", path_product = ", path_product)
     visited[start] = True
     path.append(start)
 
     for neighbor in coinDict[start].exchangeRates:
-        print('looking at neighbor ', neighbor)
         if not visited[neighbor]:
             if dfs(coinDict, neighbor, visited, path, path_product*coinDict[start].exchangeRates[neighbor]):
                 return True
@@ -72,9 +69,6 @@ def findPositiveCycles(coinDict):
         visited[coin] = False
 
     for coin in coinDict:
-        
-        print("Detecting cycle at ", coin)
-
         if not visited[coin]:
             path = []
             if dfs(coinDict, coin, visited, path, 1):
