@@ -31,13 +31,7 @@ def getCoinDict():
 
     return coinDict
 
-
-
-# testCoin = CoinNode(name = 'bitcoin')
-# print(testCoin.name)
-
 def getExchangeRate():
-    # Example usage:
     crypto_from = 'bitcoin'
     crypto_to = 'eur'
     exchange_rate = API.get_crypto_exchange_rate(crypto_from, crypto_to)
@@ -48,7 +42,79 @@ def getExchangeRate():
         print(f"Failed to retrieve the exchange rate")
 
 
-#print(API.getValidCoinList())
-getCoinDict()
+def dfs(coinDict, start, visited, path, path_product):
+    print("dfs at " + start + ", path_product = ", path_product)
+    visited[start] = True
+    path.append(start)
+
+    for neighbor in coinDict[start].exchangeRates:
+        print('looking at neighbor ', neighbor)
+        if not visited[neighbor]:
+            if dfs(coinDict, neighbor, visited, path, path_product*coinDict[start].exchangeRates[neighbor]):
+                return True
+            
+        elif path_product*coinDict[start].exchangeRates[neighbor] > 1:
+            #cycle detected
+            cycle_start_index = path.index(neighbor)
+            cycle = path[cycle_start_index:]
+            print("Cycle: ", cycle)
+            print("Val: ", path_product*coinDict[start].exchangeRates[neighbor])
+            return True
+        
+    path.pop()
+    visited[start] = False
+    return False
+
+
+def findPositiveCycles(coinDict):
+    visited : dict = {}
+    for coin in coinDict:
+        visited[coin] = False
+
+    for coin in coinDict:
+        
+        print("Detecting cycle at ", coin)
+
+        if not visited[coin]:
+            path = []
+            if dfs(coinDict, coin, visited, path, 1):
+                return True
+
+    return False
+
+
+def createSampleCoinDict():
+
+    #add nodes to dict
+    coinDict : dict = {}
+    coinDict['A'] = CoinNode.CoinNode(name='A')
+    coinDict['B'] = CoinNode.CoinNode(name='B')
+    coinDict['C'] = CoinNode.CoinNode(name='C')
+    coinDict['D'] = CoinNode.CoinNode(name='D')
+
+    #add edges
+    coinDict['A'].exchangeRates['B'] = 2.0
+    coinDict['A'].exchangeRates['D'] = 1.0
+    coinDict['B'].exchangeRates['D'] = 1.0
+    coinDict['D'].exchangeRates['C'] = 0.5
+    coinDict['C'].exchangeRates['B'] = 1.5
+
+    return coinDict
+
+def testDfs():
+    Visited : dict = {}
+    Visited['A'] = False
+    Visited['B'] = False
+    Visited['C'] = False
+    Visited['D'] = False
+    if dfs(createSampleCoinDict(), 'A', Visited, [], 1):
+        print("found cycle")
+    else:
+        print("didn't find cycle")
+
+
+#getCoinDict()
 #getExchangeRate()
 
+#testDfs()
+findPositiveCycles(getCoinDict())
